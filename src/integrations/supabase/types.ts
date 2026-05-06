@@ -14,13 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          booking_date: string
+          checked_in: boolean
+          court_no: string
+          created_at: string
+          hour: number
+          id: string
+          nickname: string
+          sport: string
+        }
+        Insert: {
+          booking_date: string
+          checked_in?: boolean
+          court_no: string
+          created_at?: string
+          hour: number
+          id?: string
+          nickname: string
+          sport: string
+        }
+        Update: {
+          booking_date?: string
+          checked_in?: boolean
+          court_no?: string
+          created_at?: string
+          hour?: number
+          id?: string
+          nickname?: string
+          sport?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_bookings: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
