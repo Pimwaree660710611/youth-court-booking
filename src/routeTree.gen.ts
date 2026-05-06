@@ -10,33 +10,72 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicCancelRouteImport } from './routes/api/public/cancel'
+import { Route as ApiPublicBookRouteImport } from './routes/api/public/book'
+import { Route as ApiPublicAvailableRouteImport } from './routes/api/public/available'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCancelRoute = ApiPublicCancelRouteImport.update({
+  id: '/api/public/cancel',
+  path: '/api/public/cancel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicBookRoute = ApiPublicBookRouteImport.update({
+  id: '/api/public/book',
+  path: '/api/public/book',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAvailableRoute = ApiPublicAvailableRouteImport.update({
+  id: '/api/public/available',
+  path: '/api/public/available',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/available': typeof ApiPublicAvailableRoute
+  '/api/public/book': typeof ApiPublicBookRoute
+  '/api/public/cancel': typeof ApiPublicCancelRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/available': typeof ApiPublicAvailableRoute
+  '/api/public/book': typeof ApiPublicBookRoute
+  '/api/public/cancel': typeof ApiPublicCancelRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/available': typeof ApiPublicAvailableRoute
+  '/api/public/book': typeof ApiPublicBookRoute
+  '/api/public/cancel': typeof ApiPublicCancelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/api/public/available'
+    | '/api/public/book'
+    | '/api/public/cancel'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/public/available' | '/api/public/book' | '/api/public/cancel'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/public/available'
+    | '/api/public/book'
+    | '/api/public/cancel'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicAvailableRoute: typeof ApiPublicAvailableRoute
+  ApiPublicBookRoute: typeof ApiPublicBookRoute
+  ApiPublicCancelRoute: typeof ApiPublicCancelRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +87,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cancel': {
+      id: '/api/public/cancel'
+      path: '/api/public/cancel'
+      fullPath: '/api/public/cancel'
+      preLoaderRoute: typeof ApiPublicCancelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/book': {
+      id: '/api/public/book'
+      path: '/api/public/book'
+      fullPath: '/api/public/book'
+      preLoaderRoute: typeof ApiPublicBookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/available': {
+      id: '/api/public/available'
+      path: '/api/public/available'
+      fullPath: '/api/public/available'
+      preLoaderRoute: typeof ApiPublicAvailableRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicAvailableRoute: ApiPublicAvailableRoute,
+  ApiPublicBookRoute: ApiPublicBookRoute,
+  ApiPublicCancelRoute: ApiPublicCancelRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
