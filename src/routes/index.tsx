@@ -23,9 +23,14 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const [sport, setSport] = useState<Sport>("badminton");
-  const [date] = useState(todayStr());
+  const [date, setDate] = useState("");
   const [nick, setNick] = useState("");
   const bookings = useBookings(sport, date);
+
+  useEffect(() => {
+    setDate(todayStr());
+  }, []);
+
 
   const [pending, setPending] = useState<{ court: string; hour: number } | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
