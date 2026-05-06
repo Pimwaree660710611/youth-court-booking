@@ -8,6 +8,8 @@ import { CourtGrid } from "@/components/CourtGrid";
 import { NicknameDialog } from "@/components/NicknameDialog";
 import { useBookings, type Booking } from "@/hooks/useBookings";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ApiDocs } from "@/components/ApiDocs";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,9 +23,14 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const [sport, setSport] = useState<Sport>("badminton");
-  const [date] = useState(todayStr());
+  const [date, setDate] = useState("");
   const [nick, setNick] = useState("");
   const bookings = useBookings(sport, date);
+
+  useEffect(() => {
+    setDate(todayStr());
+  }, []);
+
 
   const [pending, setPending] = useState<{ court: string; hour: number } | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
@@ -110,24 +117,37 @@ function HomePage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        <section>
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3">เลือกประเภทกีฬา</h2>
-          <SportSelector value={sport} onChange={setSport} />
-        </section>
+      <main className="max-w-6xl mx-auto px-4 py-6">
+        <Tabs defaultValue="booking" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="booking">🏟️ จองสนาม</TabsTrigger>
+            <TabsTrigger value="api">📡 API Docs</TabsTrigger>
+          </TabsList>
 
-        <section>
-          <CourtGrid
-            sport={sport}
-            bookings={bookings}
-            myNick={nick}
-            onSlotClick={onSlotClick}
-          />
-        </section>
+          <TabsContent value="booking" className="space-y-6 mt-6">
+            <section>
+              <h2 className="text-sm font-semibold text-muted-foreground mb-3">เลือกประเภทกีฬา</h2>
+              <SportSelector value={sport} onChange={setSport} />
+            </section>
 
-        <footer className="text-center text-xs text-muted-foreground pt-4 pb-8">
-          เปิดบริการ 09:00 – 21:00 • ไม่เช็คอินภายใน 15 นาทีหลังเริ่ม ระบบจะปลดสนามอัตโนมัติ
-        </footer>
+            <section>
+              <CourtGrid
+                sport={sport}
+                bookings={bookings}
+                myNick={nick}
+                onSlotClick={onSlotClick}
+              />
+            </section>
+
+            <footer className="text-center text-xs text-muted-foreground pt-4 pb-8">
+              เปิดบริการ 09:00 – 21:00 • ไม่เช็คอินภายใน 15 นาทีหลังเริ่ม ระบบจะปลดสนามอัตโนมัติ
+            </footer>
+          </TabsContent>
+
+          <TabsContent value="api" className="mt-6">
+            <ApiDocs />
+          </TabsContent>
+        </Tabs>
       </main>
 
       <NicknameDialog
