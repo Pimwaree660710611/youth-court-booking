@@ -8,6 +8,8 @@ import { CourtGrid } from "@/components/CourtGrid";
 import { NicknameDialog } from "@/components/NicknameDialog";
 import { useBookings, type Booking } from "@/hooks/useBookings";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ApiDocs } from "@/components/ApiDocs";
 
 export const Route = createFileRoute("/")({
   head: () => ({
