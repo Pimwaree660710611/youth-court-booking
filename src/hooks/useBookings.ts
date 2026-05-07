@@ -9,6 +9,7 @@ export type Booking = {
   booking_date: string;
   hour: number;
   nickname: string;
+  phone_number: string | null;
   checked_in: boolean;
 };
 

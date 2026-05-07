@@ -23,3 +23,4 @@ export const todayStr = () => {
 };
 
 export const NICK_KEY = "court_nickname";
+export const PHONE_KEY = "court_phone";
