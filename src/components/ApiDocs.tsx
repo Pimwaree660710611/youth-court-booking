@@ -141,13 +141,16 @@ function Endpoint({
   );
 }
 
+const PRODUCTION_BASE = "https://youth-court-booking.lovable.app";
+
 export function ApiDocs() {
-  const [base, setBase] = useState("");
+  const [previewBase, setPreviewBase] = useState("");
+  const [useProduction, setUseProduction] = useState(true);
   useEffect(() => {
-    setBase(window.location.origin);
+    setPreviewBase(window.location.origin);
   }, []);
 
-  const baseDisplay = base || "https://your-domain.lovable.app";
+  const baseDisplay = useProduction ? PRODUCTION_BASE : (previewBase || PRODUCTION_BASE);
 
   return (
     <div className="space-y-6">
