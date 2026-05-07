@@ -19,6 +19,7 @@ export function ApiTester() {
   const [hour, setHour] = useState(14);
   const [date, setDate] = useState(todayStr());
   const [nickname, setNickname] = useState("ทดสอบ");
+  const [phoneNumber, setPhoneNumber] = useState("0812345678");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<number | null>(null);
   const [resp, setResp] = useState<string>("");
@@ -36,7 +37,7 @@ export function ApiTester() {
         const params = new URLSearchParams({ sport, hour: String(hour), date });
         url += "?" + params.toString();
       } else {
-        init.body = JSON.stringify({ nickname, sport, court_no: court, hour, date });
+        init.body = JSON.stringify({ nickname, phone_number: phoneNumber, sport, court_no: court, hour, date });
       }
       const r = await fetch(url, init);
       setStatus(r.status);
@@ -113,10 +114,16 @@ export function ApiTester() {
           </div>
         )}
         {needsNickname && (
-          <div className="col-span-2">
-            <Label className="text-xs">nickname</Label>
-            <Input value={nickname} onChange={(e) => setNickname(e.target.value)} className="mt-1" />
-          </div>
+          <>
+            <div>
+              <Label className="text-xs">nickname</Label>
+              <Input value={nickname} onChange={(e) => setNickname(e.target.value)} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">phone_number</Label>
+              <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="0812345678" className="mt-1" />
+            </div>
+          </>
         )}
       </div>
 
