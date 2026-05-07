@@ -72,14 +72,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "ํYouth Bkk Court" },
+      { name: "description", content: "ระบบจองสนามกีฬากรุงเทพฯ สำหรับเยาวชน ตรวจสอบเวลาว่างและจองสนามได้ทันที" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "ํYouth Bkk Court" },
+      { property: "og:description", content: "ระบบจองสนามกีฬากรุงเทพฯ สำหรับเยาวชน ตรวจสอบเวลาว่างและจองสนามได้ทันที" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "ํYouth Bkk Court" },
+      { name: "twitter:description", content: "ระบบจองสนามกีฬากรุงเทพฯ สำหรับเยาวชน ตรวจสอบเวลาว่างและจองสนามได้ทันที" },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/edab62f1-cb09-44a8-8c1a-9297305babae/id-preview-a06644d0--e8b29189-045c-47ae-b198-9ed1935b228b.lovable.app-1778120609523.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/edab62f1-cb09-44a8-8c1a-9297305babae/id-preview-a06644d0--e8b29189-045c-47ae-b198-9ed1935b228b.lovable.app-1778120609523.png" },
     ],
     links: [
       {
