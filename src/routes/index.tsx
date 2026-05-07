@@ -10,6 +10,7 @@ import { useBookings, type Booking } from "@/hooks/useBookings";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ApiDocs } from "@/components/ApiDocs";
+import { ApiTester } from "@/components/ApiTester";
 
 export const Route = createFileRoute("/")({
   head: () => ({
