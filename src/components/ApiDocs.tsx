@@ -141,26 +141,51 @@ function Endpoint({
   );
 }
 
+const PRODUCTION_BASE = "https://youth-court-booking.lovable.app";
+
 export function ApiDocs() {
-  const [base, setBase] = useState("");
+  const [previewBase, setPreviewBase] = useState("");
+  const [useProduction, setUseProduction] = useState(true);
   useEffect(() => {
-    setBase(window.location.origin);
+    setPreviewBase(window.location.origin);
   }, []);
 
-  const baseDisplay = base || "https://your-domain.lovable.app";
+  const baseDisplay = useProduction ? PRODUCTION_BASE : (previewBase || PRODUCTION_BASE);
 
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border bg-card p-5 shadow-sm">
         <h2 className="text-xl font-bold">📡 API สำหรับเชื่อมต่อระบบภายนอก</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          ระบบเปิดให้เรียกผ่าน HTTP โดยไม่ต้องยืนยันตัวตน รองรับ CORS จากทุก origin
+          Endpoint ใช้งานได้จริงผ่าน HTTPS รองรับ CORS ทุก origin ไม่ต้องยืนยันตัวตน
         </p>
-        <div className="mt-3 text-sm">
-          <span className="text-muted-foreground">Base URL: </span>
-          <code className="font-mono bg-muted px-2 py-1 rounded">{baseDisplay}</code>
+
+        <div className="mt-4 grid sm:grid-cols-2 gap-2">
+          <button
+            onClick={() => setUseProduction(true)}
+            className={`text-left rounded-lg border p-3 transition ${
+              useProduction ? "border-primary bg-primary/5" : "hover:bg-muted/50"
+            }`}
+          >
+            <div className="text-xs font-semibold">🚀 Production (ใช้งานจริง)</div>
+            <code className="text-[11px] font-mono text-muted-foreground break-all">
+              {PRODUCTION_BASE}
+            </code>
+          </button>
+          <button
+            onClick={() => setUseProduction(false)}
+            className={`text-left rounded-lg border p-3 transition ${
+              !useProduction ? "border-primary bg-primary/5" : "hover:bg-muted/50"
+            }`}
+          >
+            <div className="text-xs font-semibold">🧪 Preview (ทดสอบ)</div>
+            <code className="text-[11px] font-mono text-muted-foreground break-all">
+              {previewBase || "—"}
+            </code>
+          </button>
         </div>
-        <div className="mt-3 text-xs text-muted-foreground space-y-1">
+
+        <div className="mt-4 text-xs text-muted-foreground space-y-1">
           <p>
             • <code className="font-mono">sport</code> ที่รองรับ:{" "}
             <code>badminton</code>, <code>futsal</code>, <code>tennis</code>,{" "}
@@ -175,6 +200,59 @@ export function ApiDocs() {
           </p>
           <p>
             • <code className="font-mono">date</code> รูปแบบ YYYY-MM-DD (ไม่ส่ง = วันนี้)
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border bg-card p-5 shadow-sm">
+        <h2 className="text-xl font-bold">🗄️ โครงสร้างฐานข้อมูล</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          ตาราง <code className="font-mono">bookings</code> เก็บข้อมูลการจองทั้งหมด
+        </p>
+
+        <div className="mt-3 rounded-lg border overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50">
+              <tr className="text-left">
+                <th className="px-3 py-2 font-semibold">คอลัมน์</th>
+                <th className="px-3 py-2 font-semibold">ชนิด</th>
+                <th className="px-3 py-2 font-semibold">คำอธิบาย</th>
+              </tr>
+            </thead>
+            <tbody className="text-xs">
+              {[
+                ["id", "uuid", "Primary key สร้างอัตโนมัติ"],
+                ["sport", "text", "ประเภทกีฬา (badminton, futsal, tennis, pingpong)"],
+                ["court_no", "text", 'เลขสนาม 2 หลัก เช่น "01"'],
+                ["booking_date", "date", "วันที่จอง (YYYY-MM-DD)"],
+                ["hour", "integer", "ชั่วโมงที่จอง 9–20"],
+                ["nickname", "text", "ชื่อเล่นผู้จอง (ใช้ยืนยันตอนยกเลิก)"],
+                ["checked_in", "boolean", "สถานะเช็คอิน (default: false)"],
+                ["created_at", "timestamptz", "เวลาที่บันทึกการจอง"],
+              ].map(([col, type, desc]) => (
+                <tr key={col} className="border-t">
+                  <td className="px-3 py-2 font-mono">{col}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{type}</td>
+                  <td className="px-3 py-2">{desc}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-4 space-y-2 text-xs text-muted-foreground">
+          <p>
+            • <strong>Unique constraint:</strong>{" "}
+            <code>(sport, court_no, booking_date, hour)</code> — กันจองซ้ำในช่วงเวลาเดียวกัน
+          </p>
+          <p>
+            • <strong>Auto-cleanup:</strong> ระบบลบการจองที่หมดเวลา หรือไม่เช็คอินภายใน 15 นาที โดยอัตโนมัติ (pg_cron ทุก 1 นาที)
+          </p>
+          <p>
+            • <strong>Realtime:</strong> เปิดใช้งาน Supabase Realtime — ทุกการเปลี่ยนแปลง broadcast ให้ client ทันที
+          </p>
+          <p>
+            • <strong>RLS:</strong> เปิดให้ public อ่าน/เขียน/ลบ ผ่านชื่อเล่นได้ตามสเปค
           </p>
         </div>
       </div>
