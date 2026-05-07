@@ -226,7 +226,8 @@ export function ApiDocs() {
                 ["court_no", "text", 'เลขสนาม 2 หลัก เช่น "01"'],
                 ["booking_date", "date", "วันที่จอง (YYYY-MM-DD)"],
                 ["hour", "integer", "ชั่วโมงที่จอง 9–20"],
-                ["nickname", "text", "ชื่อเล่นผู้จอง (ใช้ยืนยันตอนยกเลิก)"],
+                ["nickname", "text", "ชื่อเล่นผู้จอง"],
+                ["phone_number", "text", "เบอร์โทรศัพท์ผู้จอง (ใช้ยืนยันตอนยกเลิก)"],
                 ["checked_in", "boolean", "สถานะเช็คอิน (default: false)"],
                 ["created_at", "timestamptz", "เวลาที่บันทึกการจอง"],
               ].map(([col, type, desc]) => (
@@ -289,6 +290,7 @@ export function ApiDocs() {
         description="จองสนามที่ว่าง คืนค่าสำเร็จ หรือ 409 ถ้าสนามไม่ว่าง"
         params={[
           { name: "nickname", type: "string", required: true, desc: "ชื่อเล่นผู้จอง" },
+          { name: "phone_number", type: "string", required: true, desc: "เบอร์โทรศัพท์ (ตัวเลข 9-15 หลัก)" },
           { name: "sport", type: "string", required: true, desc: "ประเภทกีฬา" },
           { name: "court_no", type: "string", required: true, desc: 'เลขสนาม เช่น "01"' },
           { name: "hour", type: "number", required: true, desc: "ชั่วโมง 9-20" },
@@ -296,13 +298,14 @@ export function ApiDocs() {
         ]}
         request={`{
   "nickname": "สมชาย",
+  "phone_number": "0812345678",
   "sport": "badminton",
   "court_no": "01",
   "hour": 14
 }`}
         curl={`curl -X POST "${baseDisplay}/api/public/book" \\
   -H "Content-Type: application/json" \\
-  -d '{"nickname":"สมชาย","sport":"badminton","court_no":"01","hour":14}'`}
+  -d '{"nickname":"สมชาย","phone_number":"0812345678","sport":"badminton","court_no":"01","hour":14}'`}
         responseOk={`{
   "success": true,
   "message": "จองสำเร็จ",
@@ -311,7 +314,8 @@ export function ApiDocs() {
     "sport": "badminton",
     "court_no": "01",
     "hour": 14,
-    "nickname": "สมชาย"
+    "nickname": "สมชาย",
+    "phone_number": "0812345678"
   }
 }`}
         responseErr={`{
@@ -328,6 +332,7 @@ export function ApiDocs() {
         description="ยกเลิกได้เฉพาะเมื่อชื่อเล่นและรายละเอียดตรงกับการจองในระบบ"
         params={[
           { name: "nickname", type: "string", required: true, desc: "ชื่อเล่นที่ใช้จอง" },
+          { name: "phone_number", type: "string", required: true, desc: "เบอร์โทรศัพท์ที่ใช้ตอนจอง (ยืนยันตัวตน)" },
           { name: "sport", type: "string", required: true, desc: "ประเภทกีฬา" },
           { name: "court_no", type: "string", required: true, desc: "เลขสนาม" },
           { name: "hour", type: "number", required: true, desc: "ชั่วโมง" },
@@ -335,20 +340,21 @@ export function ApiDocs() {
         ]}
         request={`{
   "nickname": "สมชาย",
+  "phone_number": "0812345678",
   "sport": "badminton",
   "court_no": "01",
   "hour": 14
 }`}
         curl={`curl -X POST "${baseDisplay}/api/public/cancel" \\
   -H "Content-Type: application/json" \\
-  -d '{"nickname":"สมชาย","sport":"badminton","court_no":"01","hour":14}'`}
+  -d '{"nickname":"สมชาย","phone_number":"0812345678","sport":"badminton","court_no":"01","hour":14}'`}
         responseOk={`{
   "success": true,
   "message": "ยกเลิกสำเร็จ"
 }`}
         responseErr={`{
   "success": false,
-  "error": "ยกเลิกไม่ได้ — ข้อมูลไม่ตรงกัน หรือไม่มีการจอง"
+  "error": "ยกเลิกไม่ได้ — ชื่อเล่นหรือเบอร์โทรศัพท์ไม่ตรงกับการจอง"
 }`}
       />
     </div>
