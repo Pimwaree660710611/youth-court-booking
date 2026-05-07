@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast, Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { SPORTS, type Sport, todayStr, NICK_KEY, getSport } from "@/lib/courts";
+import { SPORTS, type Sport, todayStr, NICK_KEY, PHONE_KEY, getSport } from "@/lib/courts";
 import { SportSelector } from "@/components/SportSelector";
 import { CourtGrid } from "@/components/CourtGrid";
 import { NicknameDialog } from "@/components/NicknameDialog";
@@ -26,27 +26,30 @@ function HomePage() {
   const [sport, setSport] = useState<Sport>("badminton");
   const [date, setDate] = useState("");
   const [nick, setNick] = useState("");
+  const [phone, setPhone] = useState("");
   const bookings = useBookings(sport, date);
 
   useEffect(() => {
     setDate(todayStr());
   }, []);
 
-
   const [pending, setPending] = useState<{ court: string; hour: number } | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
-  const [askNick, setAskNick] = useState(false);
+  const [askDialog, setAskDialog] = useState<"profile" | "book" | null>(null);
 
   useEffect(() => {
-    const saved = typeof window !== "undefined" ? localStorage.getItem(NICK_KEY) : null;
-    if (saved) setNick(saved);
+    if (typeof window === "undefined") return;
+    const n = localStorage.getItem(NICK_KEY);
+    const p = localStorage.getItem(PHONE_KEY);
+    if (n) setNick(n);
+    if (p) setPhone(p);
   }, []);
 
   const meta = getSport(sport)!;
 
-  const book = async (nickname: string, court: string, hour: number) => {
+  const book = async (nickname: string, phoneNumber: string, court: string, hour: number) => {
     const { error } = await supabase.from("bookings").insert({
-      sport, court_no: court, booking_date: date, hour, nickname,
+      sport, court_no: court, booking_date: date, hour, nickname, phone_number: phoneNumber,
     });
     if (error) {
       if (error.code === "23505") toast.error("สนามไม่ว่าง — มีคนจองไปแล้ว");
@@ -54,7 +57,9 @@ function HomePage() {
       return;
     }
     localStorage.setItem(NICK_KEY, nickname);
+    localStorage.setItem(PHONE_KEY, phoneNumber);
     setNick(nickname);
+    setPhone(phoneNumber);
     toast.success(`จองสำเร็จ! ${meta.label} ${meta.unit} ${court} เวลา ${String(hour).padStart(2,"0")}:00`);
   };
 
@@ -65,26 +70,33 @@ function HomePage() {
       return;
     }
     setPending({ court, hour });
-    if (!nick) setAskNick(true);
+    setAskDialog("book");
   };
 
-  const confirmBooking = async (nickname: string) => {
+  const confirmBooking = async (nickname: string, phoneNumber: string) => {
     if (!pending) return;
-    await book(nickname, pending.court, pending.hour);
+    await book(nickname, phoneNumber, pending.court, pending.hour);
     setPending(null);
-    setAskNick(false);
+    setAskDialog(null);
   };
 
-  const confirmCancel = async () => {
+  const confirmCancel = async (_nick: string, phoneNumber: string) => {
     if (!cancelTarget) return;
+    if (cancelTarget.phone_number && cancelTarget.phone_number !== phoneNumber) {
+      toast.error("เบอร์โทรศัพท์ไม่ตรงกับที่ใช้ตอนจอง");
+      return;
+    }
     const { error } = await supabase
       .from("bookings")
       .delete()
       .eq("id", cancelTarget.id)
-      .eq("nickname", nick);
+      .eq("nickname", nick)
+      .eq("phone_number", phoneNumber);
     if (error) toast.error(error.message);
-    else toast.success("ยกเลิกการจองแล้ว");
-    setCancelTarget(null);
+    else {
+      toast.success("ยกเลิกการจองแล้ว");
+      setCancelTarget(null);
+    }
   };
 
   return (
@@ -107,12 +119,16 @@ function HomePage() {
                 <span className="font-semibold px-3 py-1 rounded-full bg-mine text-mine-foreground">
                   {nick}
                 </span>
-                <Button size="sm" variant="ghost" onClick={() => { localStorage.removeItem(NICK_KEY); setNick(""); }}>
+                <Button size="sm" variant="ghost" onClick={() => {
+                  localStorage.removeItem(NICK_KEY);
+                  localStorage.removeItem(PHONE_KEY);
+                  setNick(""); setPhone("");
+                }}>
                   เปลี่ยน
                 </Button>
               </>
             ) : (
-              <Button size="sm" onClick={() => setAskNick(true)}>ตั้งชื่อเล่น</Button>
+              <Button size="sm" onClick={() => setAskDialog("profile")}>ตั้งชื่อเล่น</Button>
             )}
           </div>
         </div>
@@ -153,25 +169,35 @@ function HomePage() {
       </main>
 
       <NicknameDialog
-        open={askNick}
-        title={pending ? "กรอกชื่อเล่นเพื่อจอง" : "ตั้งชื่อเล่นของคุณ"}
-        description={pending ? `${meta.label} ${meta.unit} ${pending.court} เวลา ${String(pending.hour).padStart(2,"0")}:00 - ${String(pending.hour+1).padStart(2,"0")}:00` : undefined}
+        open={askDialog !== null}
+        title={askDialog === "book" ? "กรอกข้อมูลเพื่อจอง" : "ตั้งชื่อเล่นและเบอร์โทรศัพท์"}
+        description={
+          askDialog === "book" && pending
+            ? `${meta.label} ${meta.unit} ${pending.court} เวลา ${String(pending.hour).padStart(2,"0")}:00 - ${String(pending.hour+1).padStart(2,"0")}:00`
+            : "ใช้สำหรับยืนยันตัวตนเมื่อต้องการยกเลิกการจอง"
+        }
         defaultNick={nick}
-        confirmText={pending ? "จองเลย" : "บันทึก"}
-        onConfirm={(n) => {
-          if (pending) confirmBooking(n);
-          else { localStorage.setItem(NICK_KEY, n); setNick(n); setAskNick(false); }
+        defaultPhone={phone}
+        confirmText={askDialog === "book" ? "จองเลย" : "บันทึก"}
+        onConfirm={(n, p) => {
+          if (askDialog === "book") confirmBooking(n, p);
+          else {
+            localStorage.setItem(NICK_KEY, n);
+            localStorage.setItem(PHONE_KEY, p);
+            setNick(n); setPhone(p); setAskDialog(null);
+          }
         }}
-        onCancel={() => { setAskNick(false); setPending(null); }}
+        onCancel={() => { setAskDialog(null); setPending(null); }}
       />
 
       <NicknameDialog
         open={!!cancelTarget}
-        title="ยืนยันยกเลิกการจอง?"
-        description={cancelTarget ? `${getSport(cancelTarget.sport)?.label} ${getSport(cancelTarget.sport)?.unit} ${cancelTarget.court_no} เวลา ${String(cancelTarget.hour).padStart(2,"0")}:00` : ""}
+        title="ยืนยันยกเลิกการจอง"
+        description={cancelTarget ? `${getSport(cancelTarget.sport)?.label} ${getSport(cancelTarget.sport)?.unit} ${cancelTarget.court_no} เวลา ${String(cancelTarget.hour).padStart(2,"0")}:00 — กรอกเบอร์โทรศัพท์ที่ใช้ตอนจองเพื่อยืนยัน` : ""}
         defaultNick={nick}
+        defaultPhone=""
         confirmText="ยืนยันยกเลิก"
-        onConfirm={() => confirmCancel()}
+        onConfirm={(n, p) => confirmCancel(n, p)}
         onCancel={() => setCancelTarget(null)}
       />
     </div>
