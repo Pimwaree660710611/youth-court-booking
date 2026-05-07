@@ -94,7 +94,7 @@ export function ApiTester() {
             onChange={(e) => setSport(e.target.value)}
           >
             {SPORTS.map((s) => (
-              <option key={s.key} value={s.key}>{s.key} ({s.label})</option>
+              <option key={s.id} value={s.id}>{s.id} ({s.label})</option>
             ))}
           </select>
         </div>
