@@ -145,7 +145,8 @@ function HomePage() {
             </footer>
           </TabsContent>
 
-          <TabsContent value="api" className="mt-6">
+          <TabsContent value="api" className="mt-6 space-y-6">
+            <ApiTester />
             <ApiDocs />
           </TabsContent>
         </Tabs>
