@@ -23,6 +23,7 @@ export type Database = {
           hour: number
           id: string
           nickname: string
+          phone_number: string | null
           sport: string
         }
         Insert: {
@@ -33,6 +34,7 @@ export type Database = {
           hour: number
           id?: string
           nickname: string
+          phone_number?: string | null
           sport: string
         }
         Update: {
@@ -43,6 +45,7 @@ export type Database = {
           hour?: number
           id?: string
           nickname?: string
+          phone_number?: string | null
           sport?: string
         }
         Relationships: []
