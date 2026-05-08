@@ -29,15 +29,15 @@ export function useBookings(sport: Sport, date: string) {
     load();
 
     const channel = supabase
-      .channel(`bookings-${sport}-${date}`)
+      .channel(`bookings-${sport}-${date}-${Math.random().toString(36).slice(2, 8)}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "bookings", filter: `sport=eq.${sport}` },
+        { event: "*", schema: "public", table: "bookings" },
         () => load(),
       )
       .subscribe();
 
-    const interval = setInterval(load, 30000); // safety refresh for cleanup
+    const interval = setInterval(load, 5000); // safety refresh: 5s
 
     return () => {
       active = false;
