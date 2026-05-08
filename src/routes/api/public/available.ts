@@ -1,29 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-
-const SPORTS = ["badminton", "futsal", "tennis", "pingpong"] as const;
-const COUNT: Record<string, number> = { badminton: 4, futsal: 2, tennis: 2, pingpong: 4 };
-
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+import {
+  COURT_COUNT,
+  corsHeaders,
+  normalizeDate,
+  normalizeHour,
+  normalizeSport,
+  pick,
+  readApiParams,
+} from "@/lib/publicApiHelpers";
 
 export const Route = createFileRoute("/api/public/available")({
   server: {
     handlers: {
-      OPTIONS: async () => new Response(null, { status: 204, headers: cors }),
+      OPTIONS: async () => new Response(null, { status: 204, headers: corsHeaders }),
       GET: async ({ request }) => {
-        const url = new URL(request.url);
-        const sport = url.searchParams.get("sport");
-        const hour = Number(url.searchParams.get("hour"));
-        const date = url.searchParams.get("date") ?? new Date().toISOString().slice(0, 10);
+        const params = await readApiParams(request);
+        const sport = normalizeSport(pick(params, ["sport", "sport_type", "type", "กีฬา", "ประเภทกีฬา"]));
+        const hour = normalizeHour(pick(params, ["hour", "time", "slot", "เวลา", "ชั่วโมง"]));
+        const date = normalizeDate(pick(params, ["date", "booking_date", "วันที่"]));
 
-        if (!sport || !SPORTS.includes(sport as any) || !hour || hour < 9 || hour > 20) {
+        if (!sport || hour === null) {
           return Response.json(
-            { error: "ต้องระบุ sport (badminton|futsal|tennis|pingpong) และ hour (9-20)" },
-            { status: 400, headers: cors },
+            { error: "ต้องระบุ sport (badminton|futsal|tennis|pingpong) และ hour/time (9-20)" },
+            { status: 400, headers: corsHeaders },
           );
         }
 
@@ -34,15 +34,15 @@ export const Route = createFileRoute("/api/public/available")({
           .eq("booking_date", date)
           .eq("hour", hour);
 
-        if (error) return Response.json({ error: error.message }, { status: 500, headers: cors });
+        if (error) return Response.json({ error: error.message }, { status: 500, headers: corsHeaders });
 
         const taken = new Set((data ?? []).map((r) => r.court_no));
-        const all = Array.from({ length: COUNT[sport] }, (_, i) => String(i + 1).padStart(2, "0"));
+        const all = Array.from({ length: COURT_COUNT[sport] }, (_, i) => String(i + 1).padStart(2, "0"));
         const available = all.filter((c) => !taken.has(c));
 
         return Response.json(
-          { sport, date, hour, available_courts: available, total: COUNT[sport] },
-          { headers: cors },
+          { success: true, sport, date, hour, available_courts: available, total: COURT_COUNT[sport] },
+          { headers: corsHeaders },
         );
       },
     },
