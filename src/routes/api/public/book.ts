@@ -1,36 +1,40 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-
-const SPORTS = ["badminton", "futsal", "tennis", "pingpong"];
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
-
-const cleanPhone = (p: unknown) => String(p ?? "").replace(/[-\s]/g, "");
-const phoneOk = (p: string) => /^[0-9]{9,15}$/.test(p);
+import {
+  cleanPhone,
+  corsHeaders,
+  normalizeCourtNo,
+  normalizeDate,
+  normalizeHour,
+  normalizeSport,
+  phoneOk,
+  pick,
+  readApiParams,
+} from "@/lib/publicApiHelpers";
 
 export const Route = createFileRoute("/api/public/book")({
   server: {
     handlers: {
-      OPTIONS: async () => new Response(null, { status: 204, headers: cors }),
+      OPTIONS: async () => new Response(null, { status: 204, headers: corsHeaders }),
       POST: async ({ request }) => {
-        const body = await request.json().catch(() => ({})) as any;
-        const { nickname, sport, court_no, hour, date, phone_number } = body;
-        const bookingDate = date ?? new Date().toISOString().slice(0, 10);
-        const phone = cleanPhone(phone_number);
+        const params = await readApiParams(request);
+        const nickname = pick(params, ["nickname", "nick_name", "name", "ชื่อเล่น", "ชื่อ"]);
+        const sport = normalizeSport(pick(params, ["sport", "sport_type", "type", "กีฬา", "ประเภทกีฬา"]));
+        const courtNo = normalizeCourtNo(pick(params, ["court_no", "court", "field", "สนาม", "เลขสนาม"]));
+        const hour = normalizeHour(pick(params, ["hour", "time", "slot", "เวลา", "ชั่วโมง"]));
+        const bookingDate = normalizeDate(pick(params, ["date", "booking_date", "วันที่"]));
+        const phone = cleanPhone(pick(params, ["phone_number", "phoneNumber", "phone", "tel", "เบอร์โทรศัพท์", "เบอร์"]));
 
-        if (!nickname || !sport || !SPORTS.includes(sport) || !court_no || !hour || hour < 9 || hour > 20) {
+        if (!nickname || !sport || !courtNo || hour === null) {
           return Response.json(
-            { success: false, error: "ต้องระบุ nickname, sport, court_no, hour (9-20)" },
-            { status: 400, headers: cors },
+            { success: false, error: "ต้องระบุ nickname, sport, court_no และ hour/time (9-20)" },
+            { status: 400, headers: corsHeaders },
           );
         }
         if (!phoneOk(phone)) {
           return Response.json(
             { success: false, error: "ต้องระบุ phone_number ที่ถูกต้อง (ตัวเลข 9-15 หลัก)" },
-            { status: 400, headers: cors },
+            { status: 400, headers: corsHeaders },
           );
         }
 
@@ -39,9 +43,9 @@ export const Route = createFileRoute("/api/public/book")({
           .insert({
             nickname: String(nickname).trim().slice(0, 40),
             sport,
-            court_no: String(court_no),
+            court_no: courtNo,
             booking_date: bookingDate,
-            hour: Number(hour),
+            hour,
             phone_number: phone,
           })
           .select()
@@ -49,12 +53,12 @@ export const Route = createFileRoute("/api/public/book")({
 
         if (error) {
           if (error.code === "23505") {
-            return Response.json({ success: false, error: "สนามไม่ว่าง" }, { status: 409, headers: cors });
+            return Response.json({ success: false, error: "สนามไม่ว่าง" }, { status: 409, headers: corsHeaders });
           }
-          return Response.json({ success: false, error: error.message }, { status: 500, headers: cors });
+          return Response.json({ success: false, error: error.message }, { status: 500, headers: corsHeaders });
         }
 
-        return Response.json({ success: true, message: "จองสำเร็จ", booking: data }, { headers: cors });
+        return Response.json({ success: true, message: "จองสำเร็จ", booking: data }, { headers: corsHeaders });
       },
     },
   },
